@@ -5,7 +5,6 @@ import {
     DialogCloseTrigger,
 	DialogBody,
 } from "../../components/Misc/dialog";
-import { Field } from "../Misc/field";
 import usePostComment from "../../hooks/usePostComment";
 import { useEffect, useRef, useState } from "react";
 import Comment from "../Comment/Comment";
@@ -15,24 +14,33 @@ const CommentDialog = ({ post }) => {
     const { handlePostComment, isCommenting } = usePostComment()
     const commentRef = useRef(null)
     const commentsContainerRef = useRef(null)
-    
-    const handleSubmitComment = async(e) => {
-        e.preventDefault()
-        const comment = commentRef.current.value.trim()
-        if (!comment) return
-        
-        const success = await handlePostComment(post.id, comment)
-        if (success) {
-            setComments([...comments, { text: comment, id: Date.now()}])
-            commentRef.current.value = ""
+    const [comment, setComment] = useState(null)
+
+    const scrollToBottom = () => {
+        if (commentsContainerRef.current) {
+            commentsContainerRef.scrollTop = commentsContainerRef.current.scrollHeight
         }
     }
 
-    useEffect(() => {
-        if (commentsContainerRef.current) {
-            commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight
+    const handleSubmitComment = async() => {
+        if (!comment.trim()) {
+              showToast("Error", "Comment cannot be blank", "error")
+              return
         }
-        }, [comments])
+        const success = await handlePostComment(post.id,comment)
+        if (success) {
+            setComments((prevComments) => [
+                ...prevComments,
+                { text: comments, id: Date.now() },
+            ])
+            setComment("")
+            scrollToBottom()
+        }
+    }
+    
+    useEffect(() => {
+        scrollToBottom()
+    }, [comments])
     
     return (
             <DialogContent bg={"black"} border={"1px solid gray"} maxW={"400px"}>
@@ -55,14 +63,29 @@ const CommentDialog = ({ post }) => {
                                     <Text color="gray.500">No comments yet</Text>
                             )}
                         </Flex>
-                        <Field onSubmit={handleSubmitComment} style={{ marginTop: "2rem" }}>
-                            <Input placeholder="Comment" size={"sm"} ref={commentRef} />
-                            <Flex w={"full"} justifyContent={"flex-end"}>
-                                <Button type="submit" ml={"auto"} size={"sm"} my={4} isLoading={isCommenting}>
-                                    Post
-                                </Button>
-                            </Flex>
-                        </Field>
+                        <Flex alignItems="center" gap={2}>
+                            <Input
+                                variant={"flushed"}
+                                placeholder={"Add a comment..."}
+                                fontSize={14}
+                                onChange = {(e) => setComment(e.target.value)}
+                                value={comment}
+                                ref={commentRef}
+                                flex={1}
+                            />
+                            <Button
+                                    fontSize={14}
+                                    color={"blue.500"}
+                                    fontWeight={600}
+                                    cursor={"pointer"}
+                                    _hover={{ color: "white" }}
+                                    bg={"transparent"}
+                                    onClick={handleSubmitComment}
+                                    isLoading={isCommenting}
+                            >
+                                      Post
+                            </Button>
+                        </Flex>
                 </DialogBody>
             </DialogContent>
     )

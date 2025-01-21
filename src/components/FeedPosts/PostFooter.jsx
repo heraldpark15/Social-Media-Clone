@@ -3,19 +3,11 @@ import { useRef, useState } from 'react'
 import { CommentLogo, NotificationsLogo, UnlikeLogo } from '../../assets/constants'
 import usePostComment from '../../hooks/usePostComment';
 import useAuthStore from '../../store/authStore';
-import { InputGroup } from '../Misc/input-group';
 import useLikePost from '../../hooks/useLikePost';
 import { timeAgo } from '../../utils/timeAgo';
 import CommentDialog from '../Modal/CommentModal';
-import {
-      DialogContent,
-      DialogHeader,
-      DialogCloseTrigger,
-      DialogFooter,
-      DialogBody,
-      DialogRoot,
-      DialogTrigger,
-  } from "../../components/Misc/dialog";
+import { DialogRoot,DialogTrigger, } from "../../components/Misc/dialog";
+import useShowToast from '../../hooks/useShowToast';
 
 const PostFooter = ({ post, isProfilePage, creatorProfile }) => {
   const { isCommenting, handlePostComment } = usePostComment()
@@ -23,8 +15,13 @@ const PostFooter = ({ post, isProfilePage, creatorProfile }) => {
   const authUser = useAuthStore(state => state.user)
   const commentRef = useRef(null)
   const { handleLikePost, isLiked, likes } = useLikePost(post)
+  const showToast = useShowToast()
 
   const handleSubmitComment = async() => {
+      if (!comment) {
+            showToast("Error", "Comment cannot be blank", "error")
+            return
+      }
     await handlePostComment(post.id,comment)
     setComment("")
   }
@@ -78,30 +75,26 @@ const PostFooter = ({ post, isProfilePage, creatorProfile }) => {
                         justifyContent={"space-between"}
                         w={"full"}
                     >
-                          <InputGroup>
-                                <Input
-                                    variant={"flushed"}
-                                    placeholder={"Add a comment..."}
-                                    fontSize={14}
-                                    onChange = {(e) => setComment(e.target.value)}
-                                    value={comment}
-                                    ref={commentRef}
-                                  />
-                          </InputGroup>
-                          <InputGroup>
-                                  <Button
-                                    fontSize={14}
-                                    color={"blue.500"}
-                                    fontWeight={600}
-                                    cursor={"pointer"}
-                                    _hover={{ color: "white" }}
-                                    bg={"transparent"}
-                                    onClick={handleSubmitComment}
-                                    isLoading={isCommenting}
-                                  >
-                                      Post
-                                  </Button>
-                          </InputGroup>
+                        <Input
+                        variant={"flushed"}
+                        placeholder={"Add a comment..."}
+                        fontSize={14}
+                        onChange = {(e) => setComment(e.target.value)}
+                        value={comment}
+                        ref={commentRef}
+                        />
+                        <Button
+                        fontSize={14}
+                        color={"blue.500"}
+                        fontWeight={600}
+                        cursor={"pointer"}
+                        _hover={{ color: "white" }}
+                        bg={"transparent"}
+                        onClick={handleSubmitComment}
+                        isLoading={isCommenting}
+                        >
+                              Post
+                        </Button>
                     </Flex>
               )}
       </Box>
